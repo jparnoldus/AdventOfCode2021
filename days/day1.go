@@ -1,7 +1,6 @@
 package days
 
 import (
-	"log"
 	"strconv"
 )
 
@@ -55,7 +54,6 @@ func Count(inputCh chan int, outputCh chan int) {
 	counter := 0
 	for _ = range inputCh {
 		counter++
-		log.Println(counter)
 	}
 	outputCh <- counter
 }
