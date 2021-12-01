@@ -14,10 +14,9 @@ func main() {
 	}
 	defer f.Close()
 
-	day := days.Day1{}
 	input := make(chan string)
 	results := make(chan int)
-	go day.HandleInput(input, results)
+	go days.Day1Challenge1(input, results)
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -25,6 +24,5 @@ func main() {
 	}
 	close(input)
 
-	log.Println(<-results)
 	log.Println(<-results)
 }

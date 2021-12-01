@@ -1,67 +1,77 @@
 package days
 
 import (
+	"log"
 	"strconv"
 )
 
-type Day1 struct {
-	answer1 int
-	answer2 int
+func Day1Challenge1(inputCh chan string, outputCh chan int) {
+	intCh := make(chan int)
+	go ConvertStringChannelToIntChannel(inputCh, intCh)
+
+	greaterThanPreviousCh := make(chan int)
+	go IsGreaterThanPrevious(intCh, greaterThanPreviousCh)
+	go Count(greaterThanPreviousCh, outputCh)
 }
 
-func (d *Day1) HandleInput(input chan string, results chan int) {
-	challenge1 := make(chan int)
-	challenge2 := make(chan []int)
+func Day1Challenge2(inputCh chan string, outputCh chan int) {
+	intCh := make(chan int)
+	go ConvertStringChannelToIntChannel(inputCh, intCh)
 
-	go d.handle1(challenge1)
-	go d.handle2(challenge2)
+	movingSumCh := make(chan int)
+	go GetThreeDayMovingSum(intCh, movingSumCh)
 
-	var buffer []int
-	for line := range input {
+	greaterThanPreviousCh := make(chan int)
+	go IsGreaterThanPrevious(movingSumCh, greaterThanPreviousCh)
+	go Count(greaterThanPreviousCh, outputCh)
+}
+
+func ConvertStringChannelToIntChannel(inputCh chan string, outputCh chan int) {
+	defer close(outputCh)
+	for line := range inputCh {
 		depth, err := strconv.Atoi(line)
 		if err != nil {
 			continue
 		}
-		challenge1 <- depth
-
-		buffer = append(buffer, depth)
-		if len(buffer) > 2 {
-			buffer = buffer[len(buffer)-3:]
-			challenge2 <- buffer
-		}
+		outputCh <- depth
 	}
-
-	close(challenge1)
-	close(challenge2)
-
-	results <- d.answer1
-	results <- d.answer2
 }
 
-func (d *Day1) handle1(input chan int) {
+func IsGreaterThanPrevious(inputCh chan int, outputCh chan int) {
+	defer close(outputCh)
 	previous := 0
-	for depth := range input {
+	for depth := range inputCh {
 		if previous != 0 {
 			if depth > previous {
-				d.answer1++
+				outputCh <- 1
 			}
 		}
 		previous = depth
 	}
 }
 
-func (d *Day1) handle2(input chan []int) {
-	previous := 0
-	for depths := range input {
-		sum := 0
-		for _, depth := range depths {
-			sum += depth
-		}
-		if previous != 0 {
-			if sum > previous {
-				d.answer2++
+func Count(inputCh chan int, outputCh chan int) {
+	defer close(outputCh)
+	counter := 0
+	for _ = range inputCh {
+		counter++
+		log.Println(counter)
+	}
+	outputCh <- counter
+}
+
+func GetThreeDayMovingSum(inputCh chan int, outputCh chan int) {
+	defer close(outputCh)
+	var buffer []int
+	for depth := range inputCh {
+		buffer = append(buffer, depth)
+		if len(buffer) > 2 {
+			buffer = buffer[len(buffer)-3:]
+			sum := 0
+			for _, depth := range buffer {
+				sum += depth
 			}
+			outputCh <- sum
 		}
-		previous = sum
 	}
 }
