@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	f, err := os.Open("inputs/day1.txt")
+	f, err := os.Open("inputs/day2.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -16,7 +16,7 @@ func main() {
 
 	input := make(chan string)
 	results := make(chan int)
-	go days.Day1Challenge1(input, results)
+	go days.Day2Challenge2(input, results)
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
