@@ -6,7 +6,7 @@ import (
 
 func Day1Challenge1(inputCh chan string, outputCh chan int) {
 	intCh := make(chan int)
-	go ConvertStringChannelToIntChannel(inputCh, intCh)
+	go ConvertStringToInt(inputCh, intCh)
 
 	greaterThanPreviousCh := make(chan int)
 	go IsGreaterThanPrevious(intCh, greaterThanPreviousCh)
@@ -15,7 +15,7 @@ func Day1Challenge1(inputCh chan string, outputCh chan int) {
 
 func Day1Challenge2(inputCh chan string, outputCh chan int) {
 	intCh := make(chan int)
-	go ConvertStringChannelToIntChannel(inputCh, intCh)
+	go ConvertStringToInt(inputCh, intCh)
 
 	movingSumCh := make(chan int)
 	go GetThreeDayMovingSum(intCh, movingSumCh)
@@ -25,7 +25,7 @@ func Day1Challenge2(inputCh chan string, outputCh chan int) {
 	go Count(greaterThanPreviousCh, outputCh)
 }
 
-func ConvertStringChannelToIntChannel(inputCh chan string, outputCh chan int) {
+func ConvertStringToInt(inputCh chan string, outputCh chan int) {
 	defer close(outputCh)
 	for line := range inputCh {
 		depth, err := strconv.Atoi(line)
