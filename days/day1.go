@@ -6,21 +6,20 @@ import (
 
 func Day1Challenge1(inputCh chan string, outputCh chan int) {
 	intCh := make(chan int)
-	go ConvertStringToInt(inputCh, intCh)
-
 	greaterThanPreviousCh := make(chan int)
+
+	go ConvertStringToInt(inputCh, intCh)
 	go IsGreaterThanPrevious(intCh, greaterThanPreviousCh)
 	go Count(greaterThanPreviousCh, outputCh)
 }
 
 func Day1Challenge2(inputCh chan string, outputCh chan int) {
 	intCh := make(chan int)
-	go ConvertStringToInt(inputCh, intCh)
-
 	movingSumCh := make(chan int)
-	go GetThreeDayMovingSum(intCh, movingSumCh)
-
 	greaterThanPreviousCh := make(chan int)
+
+	go ConvertStringToInt(inputCh, intCh)
+	go GetThreeDayMovingSum(intCh, movingSumCh)
 	go IsGreaterThanPrevious(movingSumCh, greaterThanPreviousCh)
 	go Count(greaterThanPreviousCh, outputCh)
 }

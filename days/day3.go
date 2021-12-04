@@ -4,53 +4,99 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 func Day3Challenge1(inputCh chan string, outputCh chan int) {
 	splitCh := make(chan string)
-	go SplitStringIntoCharacters(inputCh, splitCh)
 	intCh := make(chan int)
-	go ConvertStringToInt(splitCh, intCh)
-
-	distributorChs := []chan int{
-		make(chan int),
-		make(chan int),
-		make(chan int),
-		make(chan int),
-		make(chan int),
-	}
-	go DistributeInt(intCh, distributorChs)
-
+	var distributorChs []chan int
 	var answerChs []chan int
-	for _, distributorCh := range distributorChs {
-		answerCh := make(chan int)
-		go MostCommon(distributorCh, answerCh)
-		answerChs = append(answerChs, answerCh)
+	for i := 0; i < 12; i++ {
+		distributorChs = append(distributorChs, make(chan int))
+		answerChs = append(answerChs, make(chan int))
 	}
-
 	combinedCh := make(chan []int)
-	go CombineInOrder(answerChs, combinedCh)
-
 	bitStringCh := make(chan string)
-	go CombineToBitString(combinedCh, bitStringCh)
-
-	bitStringChs := []chan string{
-		make(chan string),
-		make(chan string),
-	}
-	go DistributeString(bitStringCh, bitStringChs)
-
+	duplicateCh := make(chan string)
 	flippedCh := make(chan string)
-	go FlipBitString(bitStringChs[1], flippedCh)
-
-	bitStringChs = append(bitStringChs[:1], flippedCh)
-	combinedStringCh := make(chan string)
-	go Combine(bitStringChs, combinedStringCh)
-
 	decimalsCh := make(chan int)
-	go ConvertBitStringToInt(combinedStringCh, decimalsCh)
 
+	go SplitStringIntoCharacters(inputCh, splitCh)
+	go ConvertStringToInt(splitCh, intCh)
+	go DistributeInt(intCh, distributorChs)
+	for index, distributorCh := range distributorChs {
+		go MostCommon(distributorCh, answerChs[index])
+	}
+	go CombineInOrder(answerChs, combinedCh)
+	go CombineToBitString(combinedCh, bitStringCh)
+	go DuplicateString(bitStringCh, duplicateCh)
+	go FlipEveryOtherBitString(duplicateCh, flippedCh)
+	go ConvertBitStringToInt(flippedCh, decimalsCh)
 	go Multiply(decimalsCh, outputCh)
+}
+
+func Day3Challenge2(inputCh chan string, outputCh chan int) {
+	inputChs := []chan string{inputCh}
+	for i := 0; i < 1; i++ {
+		filterCh := make(chan string)
+		duplicateCh := make(chan string)
+		// specificCh := make(chan string)
+		// specificIntCh := make(chan int)
+		// mostCommonCh := make(chan int)
+		// filteredInputCh := make(chan string)
+		debugCh1 := make(chan string)
+		debugCh2 := make(chan string)
+
+		go DistributeString(inputChs[i], []chan string{filterCh, duplicateCh})
+		// go GetSpecificCharacters(filterCh, i, specificCh)
+		// go ConvertStringToInt(specificCh, specificIntCh)
+		// go MostCommon(specificIntCh, mostCommonCh)
+		// go FilterWithAtIndex(duplicateCh, i, mostCommonCh, filteredInputCh)
+		go Print(filterCh, debugCh1)
+		go Print(duplicateCh, debugCh2)
+		//inputChs = append(inputChs, filteredInputCh)
+	}
+}
+
+func forever() {
+	for {
+		time.Sleep(time.Second)
+	}
+}
+
+func Print(inputCh chan string, outputCh chan string) {
+	defer close(outputCh)
+	for input := range inputCh {
+		outputCh <- input
+	}
+	panic("The end")
+}
+
+func FilterWithAtIndex(inputCh chan string, index int, valueCh chan int, outputCh chan string) {
+	defer close(outputCh)
+	value := strconv.Itoa(<-valueCh)
+	for input := range inputCh {
+		if strings.Split(input, "")[index] == value {
+			outputCh <- input
+		}
+	}
+}
+
+func GetSpecificCharacters(inputCh chan string, index int, outputCh chan string) {
+	defer close(outputCh)
+	for input := range inputCh {
+		outputCh <- strings.Split(input, "")[index]
+	}
+
+}
+
+func DuplicateString(inputCh chan string, outputCh chan string) {
+	defer close(outputCh)
+	for input := range inputCh {
+		outputCh <- input
+		outputCh <- input
+	}
 }
 
 func Multiply(inputCh chan int, outputCh chan int) {
@@ -160,22 +206,29 @@ func MostCommon(inputCh chan int, outputCh chan int) {
 func ConvertBitStringToInt(inputCh chan string, outputCh chan int) {
 	defer close(outputCh)
 	for input := range inputCh {
-		parsed, _ := strconv.ParseInt(input, 2, 5)
+		parsed, _ := strconv.ParseInt(input, 2, 64)
 		outputCh <- int(parsed)
 	}
 }
 
-func FlipBitString(inputCh chan string, outputCh chan string) {
+func FlipEveryOtherBitString(inputCh chan string, outputCh chan string) {
 	defer close(outputCh)
+	flipflop := true
 	for input := range inputCh {
-		flipped := ""
-		for _, character := range strings.Split(input, "") {
-			if character == "0" {
-				flipped += "1"
-			} else {
-				flipped += "0"
+		if flipflop {
+			outputCh <- input
+			flipflop = false
+		} else {
+			flipped := ""
+			for _, character := range strings.Split(input, "") {
+				if character == "0" {
+					flipped += "1"
+				} else {
+					flipped += "0"
+				}
 			}
+			outputCh <- flipped
+			flipflop = true
 		}
-		outputCh <- flipped
 	}
 }

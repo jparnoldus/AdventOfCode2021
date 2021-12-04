@@ -7,24 +7,22 @@ import (
 
 func Day2Challenge1(inputCh chan string, outputCh chan int) {
 	translationsCh := make(chan Coordinates2D)
-	go ConvertStringToTranslation(inputCh, translationsCh)
-
 	positionsCh := make(chan Coordinates2D)
-	go MovePosition(translationsCh, positionsCh)
-
 	lastCh := make(chan Coordinates2D)
+
+	go ConvertStringToTranslation(inputCh, translationsCh)
+	go MovePosition(translationsCh, positionsCh)
 	go LastPosition(positionsCh, lastCh)
 	go ConvertPositionToAnswer(lastCh, outputCh)
 }
 
 func Day2Challenge2(inputCh chan string, outputCh chan int) {
 	translationsCh := make(chan Coordinates2D)
-	go ConvertStringToTranslation(inputCh, translationsCh)
-
 	positionsCh := make(chan Coordinates2D)
-	go MovePositionWithAim(translationsCh, positionsCh)
-
 	lastCh := make(chan Coordinates2D)
+
+	go ConvertStringToTranslation(inputCh, translationsCh)
+	go MovePositionWithAim(translationsCh, positionsCh)
 	go LastPosition(positionsCh, lastCh)
 	go ConvertPositionToAnswer(lastCh, outputCh)
 }
